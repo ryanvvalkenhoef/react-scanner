@@ -117,33 +117,35 @@ function scan({
   astray.walk(ast, {
     ImportDeclaration(node) {
       const { source, specifiers } = node;
-      const moduleName = source.value;
-      const specifiersCount = specifiers.length;
+      if (source && typeof source.value === 'string') { // Controleer of source.value een string is
+        const moduleName = source.value;
+        const specifiersCount = specifiers.length;
 
-      for (let i = 0; i < specifiersCount; i++) {
-        switch (specifiers[i].type) {
-          case "ImportDefaultSpecifier":
-          case "ImportSpecifier":
-          case "ImportNamespaceSpecifier": {
-            const imported = specifiers[i].imported
-              ? specifiers[i].imported.name
-              : null;
-            const local = specifiers[i].local.name;
+        for (let i = 0; i < specifiersCount; i++) {
+          switch (specifiers[i].type) {
+            case "ImportDefaultSpecifier":
+            case "ImportSpecifier":
+            case "ImportNamespaceSpecifier": {
+              const imported = specifiers[i].imported
+                ? specifiers[i].imported.name
+                : null;
+              const local = specifiers[i].local.name;
 
-            importsMap[local] = {
-              ...(imported !== null && { imported }),
-              local,
-              moduleName,
-              importType: specifiers[i].type,
-            };
-            break;
-          }
+              importsMap[local] = {
+                ...(imported !== null && { imported }),
+                local,
+                moduleName,
+                importType: specifiers[i].type,
+              };
+              break;
+            }
 
-          /* c8 ignore next 5 */
-          default: {
-            throw new Error(
-              `Unknown import specifier type: ${specifiers[i].type}`
-            );
+            /* c8 ignore next 5 */
+            default: {
+              throw new Error(
+                `Unknown import specifier type: ${specifiers[i].type}`
+              );
+            }
           }
         }
       }
