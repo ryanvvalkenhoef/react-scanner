@@ -118,7 +118,7 @@ function scan({
     astray.walk(ast, {
       ImportDeclaration(node) {
         const { source, specifiers } = node;
-        if (source && typeof source.value === 'string') { // Controleer of source.value een string is
+        if (source && typeof source.value === 'string') {
           const moduleName = source.value;
           const specifiersCount = specifiers.length;
 
@@ -132,16 +132,17 @@ function scan({
                   : null;
                 const local = specifiers[i].local.name;
 
-                importsMap[local] = {
-                  ...(imported !== null && { imported }),
-                  local,
+                const importInfo = {
+                  ...importsMap[local],
                   moduleName,
+                  local,
                   importType: specifiers[i].type,
                 };
+
+                importsMap[local] = importInfo;
                 break;
               }
 
-              /* c8 ignore next 5 */
               default: {
                 throw new Error(
                   `Unknown import specifier type: ${specifiers[i].type}`
@@ -232,6 +233,7 @@ function scan({
           });
 
           componentInfo.instances.push(info);
+
         },
       },
     });
