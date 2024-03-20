@@ -57,6 +57,8 @@ function getInstanceInfo({
 }) {
   const { attributes } = node;
   const result = {
+    importInfo,
+    componentType: node.type,
     ...(importInfo !== undefined && { importInfo }),
     props: {},
     propsSpread: false,
@@ -74,11 +76,11 @@ function getInstanceInfo({
       const propName = name.name;
       const propValue = customGetPropValue
         ? customGetPropValue({
-            node: value,
-            propName,
-            componentName,
-            defaultGetPropValue: getPropValue,
-          })
+          node: value,
+          propName,
+          componentName,
+          defaultGetPropValue: getPropValue,
+        })
         : getPropValue(value);
 
       result.props[propName] = propValue;
