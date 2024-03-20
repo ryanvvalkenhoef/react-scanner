@@ -103,137 +103,139 @@ function scan({
   report,
   getPropValue,
 }) {
-  let ast;
+  if (!filePath.includes('SessionData.ts')) {
+    let ast;
 
-  try {
-    ast = parse(code, parseOptions);
-  } catch (_e) {
-    console.error(`Failed to parse: ${filePath}`);
-    return;
-  }
+    try {
+      ast = parse(code, parseOptions);
+    } catch (_e) {
+      console.error(`Failed to parse: ${filePath}`);
+      return;
+    }
 
-  const importsMap = {};
+    const importsMap = {};
 
-  astray.walk(ast, {
-    ImportDeclaration(node) {
-      const { source, specifiers } = node;
-      if (source && typeof source.value === 'string') { // Controleer of source.value een string is
-        const moduleName = source.value;
-        const specifiersCount = specifiers.length;
+    astray.walk(ast, {
+      ImportDeclaration(node) {
+        const { source, specifiers } = node;
+        if (source && typeof source.value === 'string') { // Controleer of source.value een string is
+          const moduleName = source.value;
+          const specifiersCount = specifiers.length;
 
-        for (let i = 0; i < specifiersCount; i++) {
-          switch (specifiers[i].type) {
-            case "ImportDefaultSpecifier":
-            case "ImportSpecifier":
-            case "ImportNamespaceSpecifier": {
-              const imported = specifiers[i].imported
-                ? specifiers[i].imported.name
-                : null;
-              const local = specifiers[i].local.name;
+          for (let i = 0; i < specifiersCount; i++) {
+            switch (specifiers[i].type) {
+              case "ImportDefaultSpecifier":
+              case "ImportSpecifier":
+              case "ImportNamespaceSpecifier": {
+                const imported = specifiers[i].imported
+                  ? specifiers[i].imported.name
+                  : null;
+                const local = specifiers[i].local.name;
 
-              importsMap[local] = {
-                ...(imported !== null && { imported }),
-                local,
-                moduleName,
-                importType: specifiers[i].type,
-              };
-              break;
-            }
-
-            /* c8 ignore next 5 */
-            default: {
-              throw new Error(
-                `Unknown import specifier type: ${specifiers[i].type}`
-              );
-            }
-          }
-        }
-      }
-    },
-    JSXOpeningElement: {
-      exit(node) {
-        const name = getComponentNameFromAST(node.name);
-        const nameParts = name.split(".");
-        const [firstPart, ...restParts] = nameParts;
-        const actualFirstPart = importsMap[firstPart]
-          ? getComponentName(importsMap[firstPart])
-          : firstPart;
-        const shouldReportComponent = () => {
-          if (components) {
-            if (nameParts.length === 1) {
-              if (components[actualFirstPart] === undefined) {
-                return false;
+                importsMap[local] = {
+                  ...(imported !== null && { imported }),
+                  local,
+                  moduleName,
+                  importType: specifiers[i].type,
+                };
+                break;
               }
-            } else {
-              const actualComponentName = [actualFirstPart, ...restParts].join(
-                "."
-              );
 
-              if (
-                components[actualFirstPart] === undefined &&
-                components[actualComponentName] === undefined
-              ) {
-                return false;
+              /* c8 ignore next 5 */
+              default: {
+                throw new Error(
+                  `Unknown import specifier type: ${specifiers[i].type}`
+                );
               }
             }
           }
-
-          if (includeSubComponents === false) {
-            if (nameParts.length > 1) {
-              return false;
-            }
-          }
-
-          if (importedFrom) {
-            if (!importsMap[firstPart]) {
-              return false;
-            }
-
-            const actualImportedFrom = importsMap[firstPart].moduleName;
-
-            if (importedFrom instanceof RegExp) {
-              if (importedFrom.test(actualImportedFrom) === false) {
-                return false;
-              }
-            } else if (actualImportedFrom !== importedFrom) {
-              return false;
-            }
-          }
-
-          return true;
-        };
-
-        if (!shouldReportComponent()) {
-          return astray.SKIP;
         }
-
-        const componentParts = [actualFirstPart, ...restParts];
-
-        const componentPath = componentParts.join(".components.");
-        const componentName = componentParts.join(".");
-        let componentInfo = getObjectPath(report, componentPath);
-
-        if (!componentInfo) {
-          componentInfo = {};
-          dset(report, componentPath, componentInfo);
-        }
-
-        if (!componentInfo.instances) {
-          componentInfo.instances = [];
-        }
-
-        const info = getInstanceInfo({
-          node,
-          filePath,
-          importInfo: importsMap[firstPart],
-          getPropValue,
-          componentName,
-        });
-
-        componentInfo.instances.push(info);
       },
-    },
-  });
+      JSXOpeningElement: {
+        exit(node) {
+          const name = getComponentNameFromAST(node.name);
+          const nameParts = name.split(".");
+          const [firstPart, ...restParts] = nameParts;
+          const actualFirstPart = importsMap[firstPart]
+            ? getComponentName(importsMap[firstPart])
+            : firstPart;
+          const shouldReportComponent = () => {
+            if (components) {
+              if (nameParts.length === 1) {
+                if (components[actualFirstPart] === undefined) {
+                  return false;
+                }
+              } else {
+                const actualComponentName = [actualFirstPart, ...restParts].join(
+                  "."
+                );
+
+                if (
+                  components[actualFirstPart] === undefined &&
+                  components[actualComponentName] === undefined
+                ) {
+                  return false;
+                }
+              }
+            }
+
+            if (includeSubComponents === false) {
+              if (nameParts.length > 1) {
+                return false;
+              }
+            }
+
+            if (importedFrom) {
+              if (!importsMap[firstPart]) {
+                return false;
+              }
+
+              const actualImportedFrom = importsMap[firstPart].moduleName;
+
+              if (importedFrom instanceof RegExp) {
+                if (importedFrom.test(actualImportedFrom) === false) {
+                  return false;
+                }
+              } else if (actualImportedFrom !== importedFrom) {
+                return false;
+              }
+            }
+
+            return true;
+          };
+
+          if (!shouldReportComponent()) {
+            return astray.SKIP;
+          }
+
+          const componentParts = [actualFirstPart, ...restParts];
+
+          const componentPath = componentParts.join(".components.");
+          const componentName = componentParts.join(".");
+          let componentInfo = getObjectPath(report, componentPath);
+
+          if (!componentInfo) {
+            componentInfo = {};
+            dset(report, componentPath, componentInfo);
+          }
+
+          if (!componentInfo.instances) {
+            componentInfo.instances = [];
+          }
+
+          const info = getInstanceInfo({
+            node,
+            filePath,
+            importInfo: importsMap[firstPart],
+            getPropValue,
+            componentName,
+          });
+
+          componentInfo.instances.push(info);
+        },
+      },
+    });
+  }
 }
 
 module.exports = scan;
