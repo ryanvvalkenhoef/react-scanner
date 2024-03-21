@@ -134,15 +134,17 @@ async function run({
 
 function crawlForPageFiles(directory) {
   const files = [];
+  let foundPageFile = false; 
 
   fs.readdirSync(directory).forEach((file) => {
-    const filePath = path.join(directory, file);
-    const stats = fs.statSync(filePath);
-
-    if (stats.isDirectory()) {
-      files.push(...crawlForPageFiles(filePath));
-    } else if (file.endsWith(".tsx") && file === "page.tsx") {
-      files.push(filePath);
+    if (!foundPageFile && file.startsWith("page.")) {
+      const filePath = path.join(directory, file);
+      const stats = fs.statSync(filePath);
+      
+      if (!stats.isDirectory()) {
+        files.push(filePath);
+        foundPageFile = true;
+      }
     }
   });
 
