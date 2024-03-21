@@ -134,13 +134,13 @@ async function run({
 
 function crawlForPageFiles(directory) {
   const files = [];
-  let foundPageFile = false; 
+  let foundPageFile = false;
 
   fs.readdirSync(directory).forEach((file) => {
     if (!foundPageFile && file.startsWith("page.")) {
       const filePath = path.join(directory, file);
       const stats = fs.statSync(filePath);
-      
+
       if (!stats.isDirectory()) {
         files.push(filePath);
         foundPageFile = true;

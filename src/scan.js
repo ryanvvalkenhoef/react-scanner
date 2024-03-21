@@ -76,11 +76,11 @@ function getInstanceInfo({
       const propName = name.name;
       const propValue = customGetPropValue
         ? customGetPropValue({
-          node: value,
-          propName,
-          componentName,
-          defaultGetPropValue: getPropValue,
-        })
+            node: value,
+            propName,
+            componentName,
+            defaultGetPropValue: getPropValue,
+          })
         : getPropValue(value);
 
       result.props[propName] = propValue;
@@ -103,7 +103,7 @@ function scan({
   report,
   getPropValue,
 }) {
-  if (!filePath.includes('SessionData.ts')) {
+  if (!filePath.includes("SessionData.ts")) {
     let ast;
 
     try {
@@ -118,7 +118,7 @@ function scan({
     astray.walk(ast, {
       ImportDeclaration(node) {
         const { source, specifiers } = node;
-        if (source && typeof source.value === 'string') {
+        if (source && typeof source.value === "string") {
           const moduleName = source.value;
           const specifiersCount = specifiers.length;
 
@@ -127,9 +127,6 @@ function scan({
               case "ImportDefaultSpecifier":
               case "ImportSpecifier":
               case "ImportNamespaceSpecifier": {
-                const imported = specifiers[i].imported
-                  ? specifiers[i].imported.name
-                  : null;
                 const local = specifiers[i].local.name;
 
                 const importInfo = {
@@ -167,9 +164,10 @@ function scan({
                   return false;
                 }
               } else {
-                const actualComponentName = [actualFirstPart, ...restParts].join(
-                  "."
-                );
+                const actualComponentName = [
+                  actualFirstPart,
+                  ...restParts,
+                ].join(".");
 
                 if (
                   components[actualFirstPart] === undefined &&
@@ -233,7 +231,6 @@ function scan({
           });
 
           componentInfo.instances.push(info);
-
         },
       },
     });

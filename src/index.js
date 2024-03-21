@@ -9,7 +9,9 @@ sade("react-scanner", true)
   .option("-c, --config", "Path to config file")
   .example("-c /path/to/react-scanner.config.js")
   .action((options) => {
-    const configPath = options.config ? path.resolve(process.cwd(), options.config) : './react-scanner.config.js';
+    const configPath = options.config
+      ? path.resolve(process.cwd(), options.config)
+      : "./react-scanner.config.js";
 
     try {
       const config = require(configPath);
